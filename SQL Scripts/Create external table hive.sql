@@ -8,7 +8,7 @@ CREATE TABLE hive.demo.currencyexchange (
 )
 WITH (
     format = 'CSV',
-    external_location = 's3a://demo/test/currencyexchange/',
+    external_location = 's3a://demo/data/currencyexchange/',
     skip_header_line_count = 1,
     csv_quote = '"',
     csv_escape = '"'
@@ -41,7 +41,7 @@ CREATE TABLE hive.demo.customer (
 )
 WITH (
     format = 'CSV',
-    external_location = 's3a://demo/test/customer/',
+    external_location = 's3a://demo/data/customer/',
     skip_header_line_count = 1,
     csv_quote = '"',
     csv_escape = '"'
@@ -67,7 +67,7 @@ CREATE TABLE hive.demo.date (
 )
 WITH (
     format = 'CSV',
-    external_location = 's3a://demo/test/date/',
+    external_location = 's3a://demo/data/date/',
     skip_header_line_count = 1,
     csv_quote = '"',
     csv_escape = '"'
@@ -90,7 +90,7 @@ CREATE TABLE hive.demo.product (
 )
 WITH (
     format = 'CSV',
-    external_location = 's3a://demo/test/product/',
+    external_location = 's3a://demo/data/product/',
     skip_header_line_count = 1,
     csv_quote = '"',
     csv_escape = '"'
@@ -112,7 +112,7 @@ CREATE TABLE hive.demo.sales (
 )
 WITH (
     format = 'CSV',
-    external_location = 's3a://demo/test/sales/',
+    external_location = 's3a://demo/data/sales/',
     skip_header_line_count = 1,
     csv_quote = '"',
     csv_escape = '"'
@@ -132,7 +132,7 @@ CREATE TABLE hive.demo.store (
 )
 WITH (
     format = 'CSV',
-    external_location = 's3a://demo/test/store/',
+    external_location = 's3a://demo/data/store/',
     skip_header_line_count = 1,
     csv_quote = '"',
     csv_escape = '"'

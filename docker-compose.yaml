@@ -16,7 +16,8 @@ services:
       - trino-net
 
   metastore:
-    image: metastore:latest
+    build:
+        context: ./hive-image
     container_name: metastore
     ports:
       - 9083:9083

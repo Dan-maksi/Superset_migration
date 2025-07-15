@@ -8,14 +8,14 @@ Use it to practise SQL-Lab queries, create charts, and test dashboard migration 
 
 ## Stack Overview
 
-| Service       | Purpose                                               | Port(s) |
-|---------------|-------------------------------------------------------|---------|
-| **Trino**     | SQL/query engine                                      | `8080` |
-| **Hive Metastore** | Catalog / metadata for Iceberg tables                | `9083` |
-| **MinIO**     | S3-compatible object store (sample data)              | `9000` (API) · `9001` (console) |
-| **Superset #1** | Primary BI instance                                  | `8088` |
-| **Superset #2** | Secondary instance for migration tests               | `8089` |
-| **PostgreSQL**  | Metastore DB (internal to Hive)                      | `5432` |
+| Service            | Purpose                                            | Port(s) |
+|--------------------|----------------------------------------------------|---------|
+| **Trino**          | SQL/query engine                                   | `8080` |
+| **Hive Metastore** | Catalog / metadata for Iceberg tables              | `9083` |
+| **MinIO**          | S3-compatible object store (sample data)           | `9000` (API) · `9001` (console) |
+| **Superset #1**    | Primary BI instance                                | `8088` |
+| **Superset #2**    | Secondary instance for migration tests             | `8089` |
+| **PostgreSQL**     | Metastore DB (internal to Hive)                    | `5432` |
 
 ### Trino catalogs
 
@@ -29,7 +29,7 @@ Use it to practise SQL-Lab queries, create charts, and test dashboard migration 
 ## Prerequisites
 
 * Docker Engine & Docker Compose  
-* (Optional) a SQL client, e.g. [DBeaver](https://dbeaver.io/)
+* (Optional) a SQL client such as [DBeaver](https://dbeaver.io/)
 
 ---
 
@@ -45,21 +45,31 @@ docker compose up --build -d
 
 ## 2  Load Tables (Hive → Iceberg)
 
-After containers are up, open your SQL client (DBeaver, Superset SQL Lab, etc.) and run **both** scripts in this folder:
+### 2·a  Connect DBeaver to Trino
+
+1.  **Project** – create a project.
+2. **Database ▸ New Connection** – search for **Trino** and select it.
+3. Connection settings
+
+   * **Host:** `localhost`
+   * **Port:** `8080`
+   * **Username:** any non-empty value (e.g. `demo`) – Trino rejects anonymous users.
+4. **Finish** – the connection opens; you should see catalogs such as `iceberg`, `migration`, `hive`, `system`.
+
+### 2·b  Run the setup scripts
+
+Run **both** SQL files located in `SQL Scripts/`:
 
 ```
 SQL Scripts/
-  ├─ 00_create_hive_external_tables.sql
-  └─ 01_create_iceberg_staging_tables.sql
+  00_create_hive_external_tables.sql
+  01_create_iceberg_staging_tables.sql
 ```
 
-1. **00\_create\_hive\_external\_tables.sql**
-   *Creates external Hive tables that point to CSV files in MinIO.*
+* **00\_create\_hive\_external\_tables.sql** – external Hive tables pointing to CSVs in MinIO.
+* **01\_create\_iceberg\_staging\_tables.sql** – casts columns and saves results as Iceberg tables (`stg_*`).
 
-2. **01\_create\_iceberg\_staging\_tables.sql**
-   *Casts each column to the correct data type and saves the results as Iceberg tables (`stg_*`).*
-
-After the second script finishes, the Iceberg catalog (`iceberg.demo`) contains all analysis-ready `stg_` tables.
+After script #2 finishes, the Iceberg catalog (`iceberg.demo`) contains analysis-ready `stg_` tables.
 
 ---
 
@@ -82,7 +92,7 @@ After the second script finishes, the Iceberg catalog (`iceberg.demo`) contains 
    trino://<username>@trino:8080/iceberg
    ```
 
-   Replace `<username>` with any name (Trino blocks anonymous logins).
+   Replace `<username>` with any non-empty name.
 4. **Test Connection** ▸ **Add**
 
 You now see catalog **`iceberg`**, schema **`demo`**, and all `stg_` tables.
@@ -92,10 +102,10 @@ You now see catalog **`iceberg`**, schema **`demo`**, and all `stg_` tables.
 ## 5  Create Datasets & Charts
 
 1. **Data ▸ Datasets ▸ + Dataset**
-2. Select schema **`demo`** and a table such as `stg_sales`.
-3. **Add Dataset** ▸ **Explore** to build charts.
+2. Schema **`demo`**, table e.g. **`stg_sales`**
+3. **Add Dataset** ▸ **Explore**
 
-Example chart ideas:
+Sample chart ideas:
 
 | Purpose                        | Dataset(s) / Join(s)         | Suggested Chart |
 | ------------------------------ | ---------------------------- | --------------- |
@@ -109,7 +119,7 @@ Example chart ideas:
 
 ## 6  SQL-Lab Practice Tasks
 
-See the project discussion for advanced SQL-Lab tasks that each produce chart-ready result sets.
+A saved list of advanced SQL-Lab exercises is available in the project discussion. Each produces chart-ready result sets.
 
 ---
 

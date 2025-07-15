@@ -1,5 +1,6 @@
+--STEP 1 create the schema
 create schema hive.demo;
-
+--STEP 2 Run all 6 of these blocks to create the base tables
 CREATE TABLE hive.demo.currencyexchange (
     date VARCHAR,
     fromcurrency VARCHAR,

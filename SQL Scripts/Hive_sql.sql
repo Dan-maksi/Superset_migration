@@ -138,12 +138,5 @@ SELECT
     status
 FROM hive.demo.store;
 
-SELECT
-    c.stg_customerkey,
-    c.stg_customername,
-    CAST(c.stg_age AS INTEGER) AS stg_age
-FROM iceberg.demo.stg_customer c
-WHERE CAST(c.stg_age AS INTEGER) > 50
-LIMIT 100;
 
 

@@ -107,13 +107,66 @@ You now see catalog **`iceberg`**, schema **`demo`**, and all `stg_` tables.
 
 Sample chart ideas:
 
-| Purpose                        | Dataset(s) / Join(s)         | Suggested Chart |
-| ------------------------------ | ---------------------------- | --------------- |
-| Revenue trend by day           | `stg_sales` + `stg_date`     | Line            |
-| Avg product margin by category | `stg_product`                | Bar             |
-| Age-cohort revenue             | `stg_sales` + `stg_customer` | Bar (age bins)  |
-| Exchange-rate volatility       | `stg_currencyexchange`       | Bar             |
-| Store size vs sales            | `stg_sales` + `stg_store`    | Scatter         |
+Below is a **new, five-level task set** (easy → challenging) built strictly from the columns in your `stg_` tables.
+Each task tells you what to query in Superset SQL Lab and which chart to build
+
+---
+
+## Task 1 · Customer Gender Split *(Easy)*
+
+| Item         | Details                                                                |
+| ------------ | ---------------------------------------------------------------------- |
+| **Table(s)** | `stg_customer`                                                         |
+| **Goal**     | Count customers per `gender`.                                          |
+| **Chart**    | **Pie Chart** (or Bar) • *Slice / X* = `gender` • *Metric* = COUNT(\*) |
+
+---
+
+## Task 2 · Monthly Average Exchange Rate by Currency Pair *(Moderate)*
+
+| Item         | Details                                                                                                                               |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Table(s)** | `stg_currencyexchange`                                                                                                                |
+| **Goal**     | For every `fromcurrency → tocurrency` pair, compute average `exchange` **per month**.                                                 |
+| **Chart**    | **Multi-Line Chart** • *Time* = `date` (month grain) • *Line (by)* = concat(`fromcurrency`,`tocurrency`) • *Metric* = AVG(`exchange`) |
+
+---
+
+## Task 3 · Monthly Revenue by Continent *(Intermediate)*
+
+| Item         | Details                                                                                                          |
+| ------------ | ---------------------------------------------------------------------------------------------------------------- |
+| **Table(s)** | `stg_sales`, `stg_customer`, `stg_date`                                                                          |
+| **Joins**    | `stg_sales.customerkey = stg_customer.customerkey`<br>`stg_sales.orderdate = stg_date.date`                      |
+| **Goal**     | For each **month** and **continent**, sum `netprice`.                                                            |
+| **Chart**    | **Stacked Area Chart** • *Time* = `orderdate` (month grain) • *Stack* = `continent` • *Metric* = SUM(`netprice`) |
+
+---
+
+## Task 4 · Product Profit Margin by Category *(Advanced)*
+
+| Item         | Details                                                                                                                    |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| **Table(s)** | `stg_sales`, `stg_product`                                                                                                 |
+| **Join**     | `stg_sales.productkey = stg_product.productkey`                                                                            |
+| **Goal**     | For each `categoryname`, compute **average profit margin** where margin = `(netprice – (quantity × unitcost)) / netprice`. |
+| **Chart**    | **Bar Chart** • *X* = `categoryname` • *Metric* = AVG(margin %)                                                            |
+
+---
+
+## Task 5 · Revenue Heat-Map: Working Days vs. Day-of-Week *(Challenging)*
+
+| Item         | Details                                                                                                 |
+| ------------ | ------------------------------------------------------------------------------------------------------- |
+| **Table(s)** | `stg_sales`, `stg_date`                                                                                 |
+| **Join**     | `stg_sales.orderdate = stg_date.date`                                                                   |
+| **Goal**     | Build a grid showing SUM(`netprice`) for each combination of `workingday` (true/false) and `dayofweek`. |
+| **Chart**    | **Heatmap** • *X* = `dayofweek` • *Y* = `workingday` • *Metric* = SUM(`netprice`)                       |
+
+---
+
+Use SQL Lab to write each query, run it, **save as a dataset**, then switch to **Explore** to build the specified chart type.
+
 
 ---
 

@@ -1,170 +1,149 @@
-# ✅ Superset Migration Project – Getting Started
+Copy-paste the block below directly into **`README.md`**.
+It’s fully Markdown-formatted for GitHub.
 
-**Repo:** [https://github.com/Dan-maksi/Superset\_migration](https://github.com/Dan-maksi/Superset_migration)
 
-This project sets up:
+# Superset Migration Sandbox
 
-* Trino as a SQL query engine
-* Hive Metastore
-* MinIO as object storage
-* Two Superset instances
-* A pipeline for migrating dashboards between Superset instances
+Spin up a complete analytics lab with **Trino + Iceberg**, **Apache Superset**, **Hive Metastore**, and **MinIO**.  
+Use it to practise SQL-Lab queries, create charts, and test dashboard migration between two Superset instances.
+
+---
+
+## Stack Overview
+
+| Service      | Purpose                                           | Port(s) |
+|--------------|---------------------------------------------------|---------|
+| **Trino**        | SQL/query engine                                 | `8080` |
+| **Hive Metastore** | Catalog / metadata for Iceberg tables            | `9083` |
+| **MinIO**        | S3-compatible object storage (sample data)       | `9000` (API) · `9001` (console) |
+| **Superset #1**  | Primary BI instance                              | `8088` |
+| **Superset #2**  | Secondary instance for migration tests           | `8089` |
+| **PostgreSQL**   | Metastore DB (internal to Hive)                  | `5432` |
+
+### Trino catalogs
+
+| Catalog      | Notes                                       |
+|--------------|---------------------------------------------|
+| `iceberg`    | Main analytics tables (external Hive)       |
+| `migration`  | Same connector config, blank for experiments |
 
 ---
 
 ## Prerequisites
 
-* Docker and Docker Compose installed
-* A SQL client (e.g. [DBeaver](https://dbeaver.io/))
-* (Optional) Python knowledge if modifying migration logic
+* Docker Engine & Docker Compose
+* (Optional) a SQL client, e.g. [DBeaver](https://dbeaver.io/)
 
 ---
 
-## 1. Launch Docker Compose
-
-From your repo root, run:
+## 1  Launch the Stack
 
 ```bash
-docker compose up --build
+git clone https://github.com/Dan-maksi/Superset_migration.git
+cd Superset_migration
+docker compose up --build -d
+````
+
+> **First run:**
+> MinIO loads sample CSVs into bucket `demo`, Hive external tables are created, and Iceberg staging tables (`stg_*`) are materialised.
+
+---
+
+## 2  Superset Login
+
+| Instance    | URL                                            | Username | Password |
+| ----------- | ---------------------------------------------- | -------- | -------- |
+| Superset #1 | [http://localhost:8088](http://localhost:8088) | `admin`  | `admin`  |
+| Superset #2 | [http://localhost:8089](http://localhost:8089) | `admin`  | `admin`  |
+
+---
+
+## 3  Connect Trino → Superset #1
+
+1. **Settings ▸ Data ▸ Databases ▸ + Database**
+
+2. Choose **Trino**
+
+3. **SQLAlchemy URI**
+
+   ```text
+   trino://<username>@trino:8080/iceberg
+   ```
+
+   Replace `<username>` with any name (Trino blocks anonymous logins).
+
+4. **Test Connection** ▸ **Add**
+
+You now see catalog **`iceberg`**, schema **`demo`**, and all tables beginning with `stg_`.
+
+---
+
+## 4  Create a Dataset
+
+* **Data ▸ Datasets ▸ + Dataset**
+
+  * **Database**  Trino connection you just added
+  * **Schema**    `demo`
+  * **Table**     e.g. `stg_sales`
+* **Add Dataset** ▸ **Explore**
+
+---
+
+## 5  Sample Chart Ideas
+
+| Purpose                        | Dataset(s) / Join(s)         | Suggested Chart |
+| ------------------------------ | ---------------------------- | --------------- |
+| Revenue trend by day           | `stg_sales` ＋ `stg_date`     | Line            |
+| Avg product margin by category | `stg_product`                | Bar             |
+| Age-cohort revenue             | `stg_sales` ＋ `stg_customer` | Bar (age bins)  |
+| Exchange-rate volatility       | `stg_currencyexchange`       | Bar             |
+| Store size vs sales            | `stg_sales` ＋ `stg_store`    | Scatter         |
+
+---
+
+## 6  SQL-Lab Practice Tasks
+
+A saved list of advanced SQL-Lab exercises (joins, aggregations, date logic) is in the project discussion.
+Each task is designed to produce a result set you can turn into a Superset chart.
+
+---
+
+## 7  Data Persistence
+
+| Component                      | Where it lives                                   |
+| ------------------------------ | ------------------------------------------------ |
+| Superset metadata & dashboards | Named volumes `superset1_data`, `superset2_data` |
+| MinIO sample data              | Local folder `./data/`                           |
+
+---
+
+## 8  MinIO Credentials
+
+| Console URL                                    | Access Key | Secret Key    |
+| ---------------------------------------------- | ---------- | ------------- |
+| [http://localhost:9001](http://localhost:9001) | `s3key`    | `s3keysecret` |
+
+Bucket: **`demo`**
+
+---
+
+## House-Keeping
+
+```bash
+# Stop containers, keep volumes
+docker compose down
+
+# Remove containers AND volumes (full reset)
+docker compose down -v
+docker compose up --build -d
 ```
 
-This starts:
-
-* PostgreSQL (for Hive Metastore)
-* Hive Metastore
-* Trino
-* MinIO
-* Two Superset instances
-
 ---
 
-## 2. Connect DBeaver to Trino
+Happy exploring!
+Create datasets from `stg_` tables, write custom SQL in SQL Lab, turn queries into powerful visualisations, and practise dashboard migration between the two Superset instances.
 
-Use DBeaver (or your preferred SQL client) to connect to Trino:
-
-1. Open DBeaver
-2. Create a new **Project**
-3. Inside your project:
-
-   * Right-click → **New Connection**
-4. Search for **Trino** and select it
-5. Connection settings:
-
-   * **Host:** `localhost`
-   * **Port:** `8080`
-   * **User:** any name you choose (Trino does not allow anonymous connections)
-6. Click **Finish**
-
-Your Trino connection should now show as connected.
-
----
-
-## 3. Verify Catalogs
-
-After connecting, you should see several catalogs under your Trino connection.
-
-At Invent, we primarily use **Iceberg.** Iceberg is a table format optimized for analytics and fast querying.
-
----
-
-## 4. Create Schema in Hive
-
-In DBeaver:
-
-* Expand the **hive** catalog
-* Press `F3` to open a new SQL script
-* Run:
-
-```sql
-CREATE SCHEMA hive.demo;
 ```
 
----
-
-## 5. Create Hive External Tables
-
-Next, create external tables in Hive that point to the MinIO bucket and the folders where your data resides.
-
-Example SQL:
-
-```sql
-CREATE EXTERNAL TABLE hive.demo.currencyexchange (
-    date STRING,
-    fromcurrency STRING,
-    tocurrency STRING,
-    exchange STRING
-)
-STORED AS PARQUET
-LOCATION 's3a://demo/currencyexchange/';
+*Everything above is standard GitHub Markdown—just save it as `README.md`.*
 ```
-
-Repeat similar statements for:
-
-* customer
-* date
-* product
-* sales
-* store
-
-**Note:**
-
-* The MinIO bucket is named `demo`.
-* Folder names match your subdirectories in MinIO.
-
----
-
-## 6. Create Iceberg Tables from Hive Data
-
-Now create Iceberg tables in the same schema, casting values into proper data types.
-
-Example:
-
-```sql
-CREATE TABLE iceberg.demo.stg_currencyexchange AS
-SELECT
-    CAST(date AS DATE) AS date,
-    fromcurrency,
-    tocurrency,
-    CAST(exchange AS DOUBLE) AS exchange
-FROM hive.demo.currencyexchange;
-```
-
-Repeat this for each table you want to migrate.
-Tables prefixed with **`stg_`** will become your working tables for analysis and migration.
-
----
-
-## 7. Verify Your Data
-
-Test your Iceberg tables:
-
-```sql
-SELECT * FROM iceberg.demo.stg_currencyexchange LIMIT 10;
-```
-
-If you see rows returned, your data pipeline is working!
-
----
-
-## SQL Scripts Provided
-
-If you don’t want to write all these SQL statements yourself, **SQL scripts are included in the repo**.
-
-Look under:
-
-```
-/sql_scripts/
-```
-
-* This folder contains:
-
-  * Hive table creation scripts
-  * Iceberg table creation scripts
-
-You can simply copy those scripts into DBeaver and execute them instead of writing them from scratch.
-
----
-
-**Stop here for now.**
-
-We’ll handle connecting Superset to Trino later.
